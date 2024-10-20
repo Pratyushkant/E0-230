@@ -1,0 +1,823 @@
+\documentclass[12pt,a4paper]{article}
+
+% Packages
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{algorithm}
+\usepackage{algpseudocode, mathtools, hyperref}
+\usepackage{sectsty}
+\sectionfont{\centering}
+\usepackage{cmbright}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usepackage{xcolor}
+\usepackage{csquotes}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{pifont}
+
+%\pagecolor{black}
+%\color{white}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\K}{\mathbb{K}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\pr}{\mathbb{P}}
+
+% Theorem-like environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem*{exercise}{Exercise}
+\newtheorem*{solution}{Solution}
+
+% Custom counter for illustrations
+\newcounter{illustrationcounter}
+\renewcommand{\theillustrationcounter}{\arabic{section}.\arabic{illustrationcounter}}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}  % Adjust the vertical spacing
+
+    % IISc Logo - Add the correct path to your logo image
+    \includegraphics[width=0.3\textwidth]{IISc_Master_Seal_Black.jpg}\\[1cm]
+
+    % Course Code and Name
+     \Huge\textbf{Assignment 2}\\[0.5cm]
+    \Huge\textbf{E0 230}\\[0.5cm]
+    \LARGE\textbf{Computational methods of Optimization}\\[1cm]
+
+    % Professor and TA details
+    \Large\textbf{Professor Chiranjib Bhattacharyya}\\[0.5cm]
+    %\Large\textbf{TA: Sudeshna Bhattacharjee}\\[1.5cm]
+
+    % Submitted by section
+    \Large\textbf{Submitted by:}\\[0.5cm]
+    \Large Pratyush Kant\\[0.5cm]
+\end{titlepage}
+
+\section*{1 Conjugate Gradient Descent (15 points)}
+
+In this question, we will explore different methods to solve a system of equations given by $\mathbf{Ax = b}$.
+
+\begin{enumerate}
+    \item Suppose $\mathbf{A}$ is an $n \times n$ symmetric, PD matrix. Does this equation $\mathbf{Ax = b}$ have a unique solution? State a convex quadratic minimization problem whose optimal solution is $\mathbf{x}^*$ such that $\mathbf{Ax}^* = \mathbf{b}$.
+    \item Query the oracle for a PD matrix $\mathbf{A}$ and a vector $\mathbf{b}$. Implement conjugate gradient descent on the optimization problem in previous part. Report the optimum $\mathbf{x}^*$ and the number of iterations it took to reach the optimum.
+    \item Suppose $\mathbf{A}$ is an $m \times n$ matrix with $m > n$. Does $\mathbf{Ax = b}$ have a unique solution? One strategy to solve such equations is to minimize the error term $||\mathbf{Ax - b}||$. Write down a quadratic minimization problem to minimize this error term. When does it have a unique solution?
+    \item Query the oracle for an $m \times n$ matrix $\mathbf{A}$ with $m > n$ and a $m \times 1$ vector $\mathbf{b}$. Find an $\mathbf{x}^*$ that minimizes the error term $||\mathbf{Ax - b}||$. Report the optimal $\mathbf{x}^*$ and the number of iterations it took to reach the optimum.
+\end{enumerate}
+
+
+\subsubsection*{Oracle}
+
+Import the oracle $\mathsf{f1}$. The arguments to be passed (strictly in the given order) to the function are:
+
+1. $\mathsf{srno}$: the last five digits of your serial number passed as an integer, and,
+
+2. $\mathsf{subq}$: a True or False value passed as a Boolean variable.
+
+The oracle returns a matrix and a vector depending on the value of $\mathsf{srno}$ and $\mathsf{subq}$ as follows:
+
+1. True: the oracle will return a symmetric, PD matrix $\mathbf{A}$ and an appropriate vector $\mathsf{b}$ for subquestion 2.
+
+2. False: the oracle will return a $m \times n$ matrix $\mathbf{A}$ and an $m \times 1$ vector $\mathbf{b}$ for subquestion 4.
+
+
+\section*{Solution}
+
+\begin{enumerate}
+    \item Since $\mathbf{A}$ is an $n \times n$ symmetric, PD matrix, it is invertible. Hence, the equation $\mathbf{Ax = b}$ has a unique solution, namely $\mathbf{x} = \mathbf{A}^{-1} \mathbf{b}$.
+    
+    The convex quadratic minimization problem whose optimal solution is $\mathbf{x}^*$ such that $\mathbf{Ax}^* = \mathbf{b}$ is given by:
+    
+    \begin{equation*}
+        \min_{\mathbf{x}} \frac{1}{2} \mathbf{x}^T \mathbf{A} \mathbf{x} - \mathbf{b}^T \mathbf{x}
+    \end{equation*}
+
+    \begin{lemma}
+        Let $\mathbf{A} \in \R^{n \times n}$. Then $\mathbf{A}$ is invertible if and only if $\mathbf{Ax = 0} \implies \mathbf{x} = 0$.
+    \end{lemma}
+
+    \begin{proof}
+        If $\mathbf{A}$ is invertible, then $\mathbf{Ax = 0} \implies \mathbf{x} = \mathbf{A}^{-1} \mathbf{0} = \mathbf{0}$.
+
+        Suppose there exists a non-zero vector $\mathbf{x}$ such that $\mathbf{A} \mathbf{x} = \mathbf{0}$ and $\mathbf{A}$ is invertible. Then $\mathsf{nullity}(\mathbf{A}) > 0$. From the rank-nullity theorem, we have $\mathsf{rank}(\mathbf{A}) + \mathsf{nullity}(\mathbf{A}) = n$. Since $\mathsf{nullity}(\mathbf{A}) > 0$, we have $\mathsf{rank}(\mathbf{A}) < n$. But $\mathbf{A}$ is invertible, so $\forall\ \mathbf{b} \in \R^n$, $\exists\ \mathbf{x} \in \R^n$ given by $\mathbf{x} = \mathbf{A}^{-1} \mathbf{b}$ such that $\mathbf{Ax} = \mathbf{A} \mathbf{A}^{-1} \mathbf{b} = \mathbf{b}$. This implies that $\mathsf{rank}(\mathbf{A}) = n$, which is a contradiction. Hence, $\mathbf{A}$ is not invertible.
+    \end{proof}
+
+    \begin{lemma}
+        Every PD matrix is invertible.
+    \end{lemma}
+
+    \begin{proof}
+        Let $\mathbf{A}$ be a PD matrix. Then, for any non-zero vector $\mathbf{x}$, we have $\mathbf{x}^T \mathbf{A} \mathbf{x} > 0$. This implies that $\mathbf{A} \mathbf{x} \neq \mathbf{0}$ for any non-zero vector $\mathbf{x}$. Hence, $\mathbf{A}$ is invertible, for if $\mathbf{A}$ were not invertible, then there would exist a non-zero vector $\mathbf{x}$ such that $\mathbf{A} \mathbf{x} = \mathbf{0}$.
+    \end{proof}
+
+    \item Call the function $\mathsf{f1}$ with $\mathsf{sr\_no} = 22221$ and Boolean value $1$ to get the PD matrix $\mathbf{A}$ and the vector $\mathbf{b}$.
+    
+    \begin{align*}
+        \mathbf{A} &= \begin{pmatrix}
+            2.37626673 & 0.83229223 & 0.6248642 & 0.87410062 & 0.22388762 \\
+            0.83229223 & 2.12527297 & 0.62029519 & 0.66906253 & 0.54120011 \\
+            0.6248642 & 0.62029519 & 2.69523595 & 0.27647378 & 0.40153497 \\
+            0.87410062 & 0.66906253 & 0.27647378 & 2.04197985 & 0.44878946 \\
+            0.22388762 & 0.54120011 & 0.40153497 & 0.44878946 & 2.58379722
+        \end{pmatrix}
+    \end{align*}
+
+    \begin{align*}
+        \mathbf{b} &= \begin{pmatrix}
+            13.43990929 \\
+            16.21963782 \\
+            22.36924826 \\
+            10.59773762 \\
+            23.01595542
+        \end{pmatrix}
+    \end{align*}
+
+    Recall the conjugate gradient descent algorithm presented in the algorithm \ref{alg:conjugate_gradient}.
+
+    \begin{algorithm}
+        \caption{Conjugate gradient method}
+        \begin{algorithmic}[1]
+        \State \textbf{Objective:}
+            \State To find the global minimum of $\min_{x \in \mathbb{R}^n} \frac{1}{2}x^TQx + b^Tx$.
+        \State \textbf{Input:}
+            \State A first approximation $x_1$ of the solution.
+            \State The symmetric positive definite matrix $Q \in \mathbb{R}^{n\times n}$.
+            \State The vector $b \in \mathbb{R}^n$.
+        \State \textbf{Output:}
+            \State The solution $x^* \in \mathbb{R}^n$.
+        \State \textbf{Initialization:}
+            \State $k := 1$,
+            \State $d_1 := -Qx_1 - b$.
+        \State \textbf{Repeat:}
+            \State $\alpha_k := -\frac{d_k^T(Qx_k + b)}{d_k^TQd_k}$.
+            \State $x_{k+1} := x_k + \alpha_k d_k$.
+            \State $\beta_{k+1} := \frac{\nabla f(x_{k+1})^T \nabla f(x_{k+1})}{\nabla f(x_k)^T \nabla f(x_k)} = \frac{(Qx_{k+1} + b)^T(Qx_{k+1} + b)}{(Qx_k + b)^T(Qx_k + b)}$.
+            \State $d_{k+1} := -Qx_{k+1} - b + \beta_{k+1} d_k$.
+            \State $k := k + 1$.
+        \State \textbf{Until:}{$\|\nabla f(x_k)\| = 0$ or $k = n + 1$}
+        \State $x^* = x_k$.
+        \end{algorithmic}
+        \label{alg:conjugate_gradient}
+    \end{algorithm}
+
+    We write a Python function to implement the conjugate gradient descent algorithm named $\mathsf{conjugate\_gradient\_descent}$. The function takes as input the matrix $\mathbf{A}$, the vector $\mathbf{b}$. Since the convergence is guaranteed in $n$ iterations, we set the initial guess as a random vector of size same as $\mathbf{b}$. The function $\mathsf{conjugate\_gradient\_descent}$ returns the optimal solution $\mathbf{x}^*$ and the number of iterations it took to reach the optimum.
+
+    From the output, we have the optimal solution $\mathbf{x}^*$ and the number of iterations it took to reach the optimum are given as:
+
+    \begin{align*}
+        \mathbf{x}^* &= (-2, -3, -6, -1, -7)^T
+    \end{align*}
+    $$\text{Number of iterations} = 5$$
+
+    \item No, in general the equation $\mathbf{Ax = b}$ does not have a unique solution when $\mathbf{A}$ is an $m \times n$ matrix with $m > n$. Consider the counterexample where
+    
+    \begin{align*}
+        \mathbf{A} &= \begin{pmatrix}
+            1 & 0 \\
+            0 & 0 \\
+            0 & 0
+        \end{pmatrix} \\
+        \mathbf{b} &= \begin{pmatrix}
+            1 \\
+            0 \\
+            0
+        \end{pmatrix}
+    \end{align*}
+
+    Then for all $x \in \R$, it holds that
+
+    $$A \begin{pmatrix}
+        1 \\
+        x
+    \end{pmatrix} = b$$ In this case, the equation $\mathbf{Ax = b}$ has infinitely many solutions. The equation $\mathbf{Ax = b}$ may not have a solution as well as for the same $\mathbf{A}$ above and $\mathbf{b} = \begin{pmatrix}
+        1 & 0 & 1
+    \end{pmatrix}^T$, no solution exists. It may have a unique solution as well as illustrated for subquestion 4.
+    
+    The quadratic minimization problem to minimize the error term $||\mathbf{Ax - b}||$ is given by:
+
+    \begin{equation*}
+        \min_{\mathbf{x}} \frac{1}{2} ||\mathbf{Ax - b}||^2
+    \end{equation*}
+
+    \begin{align*}
+        ||\mathbf{Ax - b}||^2 &= (\mathbf{Ax - b})^T (\mathbf{Ax - b}) \\
+        &= (\mathbf{x}^T \mathbf{A}^T - \mathbf{b}^T) (\mathbf{Ax - \mathbf{b}}) \\
+        &= \mathbf{x}^T \mathbf{A}^T \mathbf{Ax} - \mathbf{b}^T \mathbf{Ax} - \mathbf{x}^T \mathbf{A}^T \mathbf{b} + \mathbf{b}^T \mathbf{b}
+    \end{align*}
+
+    Since $\mathbf{b}^T \mathbf{Ax}$ is a scalar, we have $\mathbf{b}^T \mathbf{Ax} = (\mathbf{b}^T \mathbf{Ax})^T = \mathbf{x}^T \mathbf{A}^T \mathbf{b}$. Hence, the quadratic minimization problem becomes:
+
+    \begin{equation*}
+        \min_{\mathbf{x}} \frac{1}{2} \mathbf{x}^T \mathbf{A}^T \mathbf{A} \mathbf{x} - \mathbf{b}^T \mathbf{A} \mathbf{x} + \frac{1}{2} \mathbf{b}^T \mathbf{b}
+    \end{equation*}
+
+    Let $\mathbf{x}^*$ be the optimal solution to the above minimization problem. Then it must be a local minimum. The necessary condition for $\mathbf{x}^*$ to be a local minimum is that the gradient of the function at $\mathbf{x}^*$ must be zero. Hence, we have:
+
+    \begin{align*}
+        \nabla f(\mathbf{x}^*) &= \mathbf{A}^T \mathbf{A} \mathbf{x}^* - \mathbf{A}^T \mathbf{b} = 0 \\
+        \implies \mathbf{A}^T \mathbf{A} \mathbf{x}^* &= \mathbf{A}^T \mathbf{b}
+    \end{align*}
+
+    If $\mathbf{A}^T \mathbf{A}$ is invertible, then the above equation has a unique solution $\mathbf{x}^*$, given by $\mathbf{x}^* = (\mathbf{A}^T \mathbf{A})^{-1} \mathbf{A}^T \mathbf{b}$. Hence, the quadratic minimization problem has a unique solution if $\mathbf{A}^T \mathbf{A}$ is invertible.
+
+    \item The matrix $\mathbf{A}$ and the vector $\mathbf{b}$ are given by the oracle. The optimal solution can be found by calling the function $\mathsf{conjugate\_gradient\_descent}$ with the matrix $\mathbf{A}^T\mathbf{A}$ and the vector $\mathbf{A}^T\mathbf{b}$. The optimal solution $\mathbf{x}^*$ and the number of iterations it took to reach the optimum are given as:
+    
+    \begin{align*}
+        \mathbf{x}^* &= \begin{pmatrix}
+            2.00000000e+00 \\
+            -3.00000000e+00 \\
+            -3.58075015e-16 \\
+            -9.00000000e+00 \\
+            -5.00000000e+00
+        \end{pmatrix}
+    \end{align*}
+    $$\text{Number of iterations} = 5$$
+\end{enumerate}
+
+\newpage
+
+\section*{2 Newton's Method (10 points)}
+
+As discussed in class, the Newton-update is given by:
+$$\mathbf{x}(t+1) = \mathbf{x}(t) - H(\mathbf{x}(t))^{-1} \nabla f(\mathbf{x}(t))$$
+where, $\nabla f(\mathbf{x})$ and $H(\mathbf{x})$ are the gradient and Hessian of a function $f : \R^d \to \R$ at the point $\mathbf{x}$, respectively. Write code to implement Newton's method to minimise an unconstrained objective function. This code-snippet will henceforth be referred to as $\mathsf{Newton}$ in the assignment.
+
+Now, import the oracle $\mathsf{f2}$, which encodes a function $f : \R^5 \to \R$. The arguments to be passed (strictly in the given order) to the function are:
+
+\begin{enumerate}
+    \item $\mathbf{x} \in \R^5$: a $1 \times 5$ numpy array,
+    \item $\mathsf{srno}$: the last five digits of your serial number passed as an integer, and,
+    \item order $\in \{0, 1, 2\}$.
+\end{enumerate}
+
+The oracle returns the function-value at $\mathbf{x}$ if the order is $0$, $\nabla f(\mathbf{x})$ if the order is $1$, and $\mathbf{H(x)}^{-1} \nabla f(\mathbf{x})$ if the order is $2$. Also, let $\mathbf{x}_0 = [0, 0, 0, 0, 0]^T$.
+
+\begin{enumerate}
+    \item Run gradient descent (implemented in Assignment 1) for $100$ iterations with five choices of step-sizes with $\mathbf{x}_0$ as the initial point. Plot the function value at each iteration for each choice of step-size. Report $\mathbf{x}$ at the final iteration.
+    \item Execute $\mathsf{Newton}$ for $100$ iterations starting from $\mathbf{x}_0$, and plot the function values at each iteration. Compare the results with those from gradient descent. Report $\mathbf{x}$ at the final iteration.
+    \item Execute $\mathsf{Newton}$ for $100$ iterations starting from five different initial points, and plot the function values at each iteration. What do you observe? There are two important observations that can be made.
+    \item Based on the above observation, guess the nature of the function in the oracle, and prove that the observation holds for such functions.
+\end{enumerate}
+
+\section*{Solution}
+
+Define the following functions in the script:
+\begin{align*}
+    \mathsf{f2\_value}(\mathbf{x}) &\coloneqq \mathsf{f2}(\mathbf{x}, \mathsf{srno}, 0) \\
+    \mathsf{f2\_gradient}(\mathbf{x}) &\coloneqq \mathsf{f2}(\mathbf{x}, \mathsf{srno}, 1) \\
+    \mathsf{Newton\_update\_term}(\mathbf{x}) &\coloneqq \mathsf{f2}(\mathbf{x}, \mathsf{srno}, 2)
+\end{align*}
+
+\begin{enumerate}
+    \item We run gradient descent for $100$ iterations with five choices of step-sizes with $\mathbf{x}_0 = [0, 0, 0, 0, 0]^T$ as the initial point. The step-sizes are chosen as $$\alpha \in \{1e-3, 1e-2, 0.05, 0.1, 0.5\}$$ The function value at each iteration for each choice of step-size is plotted in figure \ref{fig:f2_value_vs_iterations}. The final $\mathbf{x}$ at the end of $100$ iterations is reported and some other statistics are given in the tables \ref{table:results_final_x} and \ref{table:results_fx_gradient}.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{1.png}
+        \caption{Function value vs iterations for different step-sizes}
+        \label{fig:f2_value_vs_iterations}
+    \end{figure}
+    
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Step Size} & \textbf{Final x} \\
+        \hline
+        $1 \times 10^{-3}$ & [0.1814332, 0.1814332, 0.1814332, 0.1814332, 0.09520785] \\
+        \hline
+        $1 \times 10^{-2}$ & [0.86738044, 0.86738044, 0.86738044, 0.86738044, 0.63396766] \\
+        \hline
+        0.05 & [0.99997344, 0.99997344, 0.99997344, 0.99997344, 0.99407947] \\
+        \hline
+        0.1 & [1.0, 1.0, 1.0, 1.0, 0.99997344] \\
+        \hline
+        0.5 & [1.0, 1.0, 1.0, 1.0, 1.0] \\
+        \hline
+        \end{tabular}
+        \caption{Results for Final $x$}
+        \label{table:results_final_x}
+    \end{table}
+
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Step Size} & \textbf{Final f(x)} & \textbf{Gradient Norm} \\
+        \hline
+        $1 \times 10^{-3}$ & -1.4104691303093915 & 3.39698022503573 \\
+        \hline
+        $1 \times 10^{-2}$ & -4.362658376148133 & 0.6445050973805453 \\
+        \hline
+        0.05 & -4.499982470844842 & 0.005921482447445214 \\
+        \hline
+        0.1 & -4.499999999647246 & 2.656139890017905e-05 \\
+        \hline
+        0.5 & -4.5 & 0.0 \\
+        \hline
+        \end{tabular}
+        \caption{Results for Final $f(x)$ and Gradient Norm}
+        \label{table:results_fx_gradient}
+    \end{table}
+    
+    \item The plot of function values at each iteration for Newton's method is shown in figure \ref{fig:newton_f2_value_vs_iterations}. The final $\mathbf{x}$ at the end of $100$ iterations is reported in table \ref{table:newton_results_final_x}.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{2.png}
+        \caption{Function value vs iterations for Newton's method}
+        \label{fig:newton_f2_value_vs_iterations}
+    \end{figure}
+
+    \begin{table}[ht]
+        \centering
+        \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Final x} & \textbf{Final f(x)} & \textbf{Gradient Norm} \\
+        \hline
+        [1.0, 1.0, 1.0, 1.0, 1.0] & -4.5 & 0 \\
+        \hline
+        \end{tabular}
+        \caption{Results for Final $x$}
+        \label{table:newton_results_final_x}
+    \end{table}
+    
+    Unlike gradient descent, Newton's method converges to the optimal solution in a single iteration. This is because Newton's method unlike gradient descent uses the second-order information of the function to find the optimal solution. The function value at the final iteration is $-4.5$ and the gradient norm is $0$.
+
+    \item The plot of function values at each iteration for Newton's method starting from five different initial points is shown in figure \ref{fig:newton_f2_value_vs_iterations_different_initial_points}. The two important observations that can be made are:
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{3.png}
+        \caption{Function value vs iterations for Newton's method with different initial points}
+        \label{fig:newton_f2_value_vs_iterations_different_initial_points}
+    \end{figure}
+    
+    \begin{enumerate}
+        \item Newton's method converges to the optimal solution in a single iteration irrespective of the initial point.
+        \item The final point is $[1, 1, 1, 1, 1]^T$, the function value at the final iteration is $-4.5$ and the gradient norm is $0$ at that point. The point is the local minima of the function as there are points where the function value is greater than $-4.5$. (Refer to the plot in figure \ref{fig:newton_f2_value_vs_iterations_different_initial_points})
+    \end{enumerate}
+
+    \item The function in the oracle is a quadratic function. The function is given by:
+    
+    \begin{equation*}
+        f(\mathbf{x}) = \frac{1}{2} \mathbf{x}^T \mathbf{Q} \mathbf{x} - \mathbf{g}^T \mathbf{x} + c
+    \end{equation*}
+
+    Let $\mathbf{x}_0$ be the initial point and $\mathbf{x}^*$ be the optimal solution. Then the gradient and Hessian of the function is given by:
+
+    \begin{align*}
+        \nabla f(\mathbf{x}) &= \mathbf{Q} \mathbf{x} - \mathbf{g} \\
+        \mathbf{H} &= \nabla^2 f(\mathbf{x}) = \mathbf{Q}
+    \end{align*}
+
+    At the optimal solution $\mathbf{x}^*$, we have $\nabla f(\mathbf{x}^*) = 0$. Hence, we have:
+
+    \begin{align*}
+        \mathbf{Q} \mathbf{x}^* &= \mathbf{g} \\
+        \implies \mathbf{x}^* &= \mathbf{Q}^{-1} \mathbf{g}
+    \end{align*}
+
+    The Newton's method update is given by:
+
+    \begin{align*}
+        \mathbf{x}(t+1) &= \mathbf{x}(t) - \mathbf{H}^{-1} \nabla f(\mathbf{x}(t)) \\
+        &= \mathbf{x}(t) - \mathbf{Q}^{-1} (\mathbf{Q} \mathbf{x}(t) - \mathbf{g}) \\
+        &= \mathbf{x}(t) - \mathbf{x}(t) + \mathbf{Q}^{-1} \mathbf{g} \\
+        &= \mathbf{x}^*
+    \end{align*}
+
+    Hence, Newton's method converges to the optimal solution in a single iteration for quadratic functions. This is the reason why Newton's method converges to the optimal solution in a single iteration irrespective of the initial point in subquestion 3.
+\end{enumerate}
+
+\section*{3 Newton's Method continued (15 points)}
+
+For this problem, use the oracle $\mathsf{f3}$, which takes the same arguments as $\mathsf{f2}$ and returns values in a similar format. Also, for all of the following subparts, start with $\mathbf{x}^{(0)} = [1, 1, 1, 1, 1]6T$ as the initial point.
+
+\begin{enumerate}
+    \item Run gradient descent with a step-size of $0.1$ for a $100$ iterations and plot the function-values. Report the best function value obtained over all the iterations.
+    \item Did you observe oscillations in the above plot? Try to guess possible reasons for this phenomenon, and suggest ways to overcome them.
+    \item Execute $\mathsf{Newton}$ for a $100$ iterations, and report the function-values for only the first $10$ iterations. Did the algorithm converge? If not, why?
+    \item Now, let's play a game! Note that the cost of calculating the Hessian is often close to $\mathcal{O}(d^2)$ for a function in $\R^d$. And, to make matters worse, Newton's method necessitates the inversion of the Hessian, which is in $\mathcal{O}(d^3)$. Since $d = 5$ for this problem, the cost of each Newton-update is about $25 \times$ that of a gradient-update! To circumvent the high cost of Newton's method, and to avoid issues with its convergence, a common practice is to run gradient-descent for $K$ iterations, followed by the use of Newton's method to take advantage of the quadratic convergence once the iterates are in the vicinity of a (local) minimum.
+    
+    Replicate the aforesaid strategy by running a total of $100$ iterations, of which $K \leq 100$ iterations are gradient-based, and the rest are Newton-based. Let each gradient-update have a unit-cost, and consequently, the cost of each Newton-update is $25$ units. Experiment with different values of step-sizes and $K$, and track the total cost of the optimisation procedure. Report the least observed cost, the corresponding function-value and $\mathbf{x}$ at the last iteration for that value of $K$. Also, plot the function-values at each iteration, denoting each gradient-step with a blue dot ({\color{blue} $\bullet$}), and each Newton-step with a red-coloured cross ({\color{red} $\times$}). One may even interleave the gradient and Newton updates, if that leads to lower costs.
+\end{enumerate}
+
+
+\section*{Solution}
+
+\begin{enumerate}
+    \item Again define the functions $\mathsf{f3\_value}$, $\mathsf{f3\_gradient}$ and $\mathsf{Newton\_update\_term}$ in the script. Run gradient descent for $100$ iterations with a step-size of $0.1$ and plot the function values at each iteration. The plot is shown in figure \ref{fig:f3_value_vs_iterations}.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{4.png}
+        \caption{Function value vs iterations for gradient descent}
+        \label{fig:f3_value_vs_iterations}
+    \end{figure}
+
+    The best function value obtained over all the iterations is $$\min \mathsf{f3\_values} = 6.1331442462800325$$ The other statistics are given in the tables \ref{table:f3_results} and \ref{table:f3_fx_gradient}.
+
+    \begin{table}
+        \centering
+        \begin{tabular}{|c|}
+        \hline
+        \textbf{Final x} \\
+        \hline
+        [-4.79441025e-01, 2.17408789e-17, 2.17408789e-17, 2.17408789e-17, 3.19757550e-05] \\
+        \hline
+        \end{tabular}
+        \caption{Results for Final $x$ and $f(x)$}
+        \label{table:f3_results}
+    \end{table}
+
+    \begin{table}
+        \centering
+        \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Final f(x)} & \textbf{Gradient Norm} \\
+        \hline
+        7.08773661132298 & 8.996784413067298 \\
+        \hline
+        \end{tabular}
+        \caption{Results for Final $f(x)$ and Gradient Norm}
+        \label{table:f3_fx_gradient}
+    \end{table}
+
+    \item Yes, oscillations are observed in the plot. The possible reasons for this phenomenon are:
+    
+    \begin{enumerate}
+        \item The initial point is too far from the optimal solution.
+        \item The step-size is too large for the gradient descent to converge to the optimal solution.
+        \item The number of iterations is too small for the gradient descent to converge to the optimal solution.
+    \end{enumerate}
+
+    The gradient descent overshoots the optimal solution and oscillates around it. To overcome this, we can try the following:
+
+    \begin{enumerate}
+        \item Choose a smaller step-size.
+        \item Choose a better initial point.
+        \item Increase the number of iterations.
+    \end{enumerate}
+
+    \item The function values for the first $10$ iterations are presented in table \ref{table:f3_first_10_iterations}. The algorithm does not converge.
+    
+    \begin{table}
+        \centering
+        \begin{tabular}{|c|}
+        \hline
+        \textbf{Function Values} \\
+        np.float64(16.18137781002638)\\
+        np.float64(inf)\\
+        np.float64(inf)\\
+        np.float64(nan)\\
+        np.float64(nan)\\
+        np.float64(nan)\\
+        np.float64(nan)\\
+        np.float64(nan)\\
+        np.float64(nan)\\
+        np.float64(nan) \\
+        \hline
+        \end{tabular}
+        \caption{Function values for the first 10 iterations}
+        \label{table:f3_first_10_iterations}
+    \end{table}
+
+    One of the possible reasons for the algorithm not converging is that the initial point is to far from the optimal solution. The algorithm diverges and the function values become $\infty$ and $\text{NaN}$. Another possible reason can be that the function is too much non-linear and the Newton's method is not able to converge to the optimal solution.
+
+    We observe that starting at another initial point, $(0.1, 0.1, 0.1, 0.1, 0.1)^T$ the Newton's method converges at a point where $\nabla f(\mathbf{x}) = 0$ and the function value is $3.4657359027997265$. This is shown in the figure \ref{fig:newton_f3_value_vs_iterations}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{5.png}
+        \caption{Function value vs iterations for Newton's method}
+        \label{fig:newton_f3_value_vs_iterations}
+    \end{figure}
+
+    By changing the initial point, one observes that at the origin the Gradient is already $0$ and hence origin is the optimal solution. The function value at the origin is $3.4657359027997265$. This is shown in the figure \ref{fig:newton_f3_value_vs_iterations_origin}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{6.png}
+        \caption{Function value vs iterations for Newton's method}
+        \label{fig:newton_f3_value_vs_iterations_origin}
+    \end{figure}
+
+    The reason why Newton's method did not converge at the initial point $(1, 1, 1, 1, 1)^T$ is maybe because the point is too far from the optimal solution. While the latter initial point, $(0.1, 0.1, 0.1, 0.1, 0.1)^T$ is closer to the optimal solution and hence the Newton's method converges to the optimal solution.
+
+    \item The plot for step size $0.01$ is shown in the figure \ref{fig:0.01}. Similarly the plots for step size $0.02$, $0.1$ and $0.15$ are shown in the figures \ref{fig:0.02}, \ref{fig:0.1} and \ref{fig:0.15} respectively.
+    
+    \begin{figure}
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.01_0.png}
+            \caption*{$K = 0$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.01_10.png}
+            \caption*{$K = 10$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.01_30.png}
+            \caption*{$K = 30$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.01_70.png}
+            \caption*{$K = 70$}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.01_100.png}
+            \caption*{$K = 100$}
+        \end{minipage}
+        \caption{Step size = 0.01}
+        \label{fig:0.01}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.02_0.png}
+            \caption*{$K = 0$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.02_10.png}
+            \caption*{$K = 10$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.02_30.png}
+            \caption*{$K = 30$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.02_70.png}
+            \caption*{$K = 70$}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.02_100.png}
+            \caption*{$K = 100$}
+        \end{minipage}
+        \caption{Step size = 0.02}
+        \label{fig:0.02}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.1_0.png}
+            \caption*{$K = 0$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.1_10.png}
+            \caption*{$K = 10$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.1_30.png}
+            \caption*{$K = 30$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.1_70.png}
+            \caption*{$K = 70$}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.1_100.png}
+            \caption*{$K = 100$}
+        \end{minipage}
+        \caption{Step size = 0.1}
+        \label{fig:0.1}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.15_0.png}
+            \caption*{$K = 0$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.15_10.png}
+            \caption*{$K = 10$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.15_30.png}
+            \caption*{$K = 30$}
+        \end{minipage}
+        \begin{minipage}{0.48\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.15_70.png}
+            \caption*{$K = 70$}
+        \end{minipage}
+        \begin{minipage}{0.4\textwidth}
+            \centering
+            \includegraphics[width=\linewidth]{0.15_100.png}
+            \caption*{$K = 100$}
+        \end{minipage}
+        \caption{Step size = 0.15}
+        \label{fig:0.15}
+    \end{figure}
+
+    The algorithm converges only for (step size = 0.01, K = 30), (step size = 0.01, K = 70), (step size = 0.02, K = 30), (step size = 0.01, K = 70).\footnote{Checked by seeing that the norm of the Gradient at the final $\mathbf{x}$ is $0$.} The cost for a general $K$ is $$\text{Cost} = 1 \times K + (100 - K) \times 25 = 2500 - 24K$$ Therefore, the least observed cost is for $K = 70$ at $2500 - 24 \times 70 = 2500 - 1680 = 820$ corresponding to step size $0.01$ and $K = 70$ the final $\mathbf{x}$ is
+
+    $$\mathbf{x} = \begin{pmatrix}
+        -1.12433801e-18 \\
+        7.55614269e-18 \\
+        7.55614269e-18 \\
+        7.55614269e-18 \\
+        2.95094984e-17
+    \end{pmatrix}$$ 
+    
+    and the function value is $3.4657359027997265$. In case of step size = 0.02 and $K = 70$, the final $\mathbf{x}$ is
+
+    $$\mathbf{x} = \begin{pmatrix}
+        -2.11787047e-18 \\
+        1.16592497e-17\\
+        1.16592497e-17\\
+        1.16592497e-17\\
+        -3.68628739e-18
+    \end{pmatrix}$$
+
+    and the function value is $3.4657359027997265$.
+\end{enumerate}
+
+The method also converges for step size $0.02$ and $K = 97$ as shown in the figure \ref{pic}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{pic.png}
+    \caption{Function value vs iterations for step size = 0.02 and K = 97}
+    \label{pic}
+\end{figure}
+
+The cost in this case is $2500 - 24 \times 97 = 2500 - 2328 = 172$ and the final $\mathbf{x}$ is
+
+$$\mathbf{x} = \begin{pmatrix}
+    4.54346768e-18 \\
+    7.86195416e-18 \\
+    7.86195416e-18\\
+    7.86195416e-18 \\
+    -3.51378383e-18
+\end{pmatrix}$$ while the function value is $3.4657359027997265$.
+
+Comparing these results with the results of the Newton's method in subquestion 3, we observe that the cost is significantly reduced by using the hybrid method. The hybrid method is able to converge to the optimal solution in a lesser number of iterations and hence the cost is reduced. The hybrid method is able to take advantage of the quadratic convergence of Newton's method once the iterates are in the vicinity of the local minimum. The lowest cost is observed for step size $0.02$ and $K = 97$ as $172$.
+
+\clearpage
+
+\section*{4 Quasi-Newton Methods (10 points)}
+
+In this question, we will explore Quasi-Newton methods. Any approximation of the Hessian in the secant approximation can be considered a Quasi-Newton method.
+
+\begin{enumerate}
+    \item There may be cases where you are severely constrained by memory and you can
+    only store one extra variable apart from two values of $\mathbf{x}$ and two values of $\nabla f(\mathbf{x})$. A good idea here is to approximate the Hessian by a scalar multiple of the identity matrix. Derive an update expression for this approach. You may find two solutions.
+    \item Use the oracle from question 2. Compare your quasi-Newton solutions from the
+    previous part with gradient descent (try a few different step sizes) and the quasi-Newton
+    rank 1 update as discussed in class. Plot the values of $f$ for $100$ iterations for these methods. Report $\mathbf{x}^*$ obtained by each method.
+\end{enumerate}
+
+\section*{Solution}
+
+\begin{enumerate}
+    \item Let $\mathbf{H} \approx \gamma_k \mathbf{I}$ be the approximation of the Hessian. The Quasi-Newton condition states then:
+    
+    \begin{align*}
+        \mathbf{H}_{k + 1} \mathbf{s_k} &= \mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}})} \\
+        \implies \gamma_{k + 1} \mathbf{I} \mathbf{s_k} &= \mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}})} \\
+        \implies \gamma_{k + 1} \mathbf{s_k} &= \mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}})}
+    \end{align*}
+
+    Multiplying both sides by $\mathbf{s_k}^T$ on the left, we get:
+
+    \begin{align*}
+        \gamma_{k + 1} \mathbf{s_k} \mathbf{s_k}^T &= \mathbf{s_k}^T (\mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}}))} \\
+        \implies \gamma_{k + 1} &= \frac{\mathbf{s_k}^T (\mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}})})}{\mathbf{s_k}^T \mathbf{s_k}}
+    \end{align*}
+
+    Hence the update rule for the approximation of the Hessian is $$\mathbf{H}_{k + 1} = \frac{\mathbf{s_k}^T (\mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}})})}{\mathbf{s_k}^T \mathbf{s_k}} \mathbf{I}$$
+
+    The update rule then becomes
+
+    \begin{align*}
+        \mathbf{x_{k + 1}} &= \mathbf{x_k} - \gamma_{k + 1}^{-1} \mathbf{I} \mathbf{\nabla f(\mathbf{x_k})} \\
+        &= \mathbf{x_k} - \frac{\mathbf{s_k}^T \mathbf{s_k}}{\mathbf{s_k}^T (\mathbf{\nabla f(\mathbf{x_k}) - \nabla f(\mathbf{x_{k - 1}})})} \mathbf{\nabla f(\mathbf{x_k})}
+    \end{align*}
+
+    Suppose instead of $H$ we want to approximate $H^{-1}$ by a scalar multiple of the identity matrix, $\mathbf{H}^{-1}_k = \gamma_k \mathbf{I}$ Then,
+
+    \begin{align*}
+        \mathbf{H}_{k + 1}^{-1} (\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})}) &= \mathbf{s_k} \\
+        \implies \gamma_{k + 1}^{-1} \mathbf{I} (\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})}) &= \mathbf{s_k} \\
+        \implies \gamma_{k + 1}^{-1} (\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})}) &= \mathbf{s_k}
+    \end{align*}
+
+    Multiplying both sides by $(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T$ on the left, we get:
+
+    \begin{align*}
+        \implies \gamma_{k + 1}^{-1} &= \frac{\mathbf{s_k}(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T}{(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T}
+    \end{align*}
+
+    Hence the update rule for the approximation of the inverse of the Hessian is
+
+    \begin{align*}
+        \mathbf{H}_{k + 1}^{-1} &= \frac{\mathbf{s_k}(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T}{(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T} \mathbf{I}
+    \end{align*}
+
+    The update rule then becomes
+
+    \begin{align*}
+        \mathbf{x_{k + 1}} &= \mathbf{x_k} - \gamma_{k + 1} \mathbf{I} \mathbf{s_k} \\
+        &= \mathbf{x_k} - \frac{(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T \mathbf{s_k}}{(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})(\mathbf{\nabla f(\mathbf{x}_k) - \nabla f(\mathbf{x}_{k - 1})})^T} \mathbf{s_k}
+    \end{align*}
+
+    \item Based on the above two methods, two Quasi Newton methods named as $\mathsf{custom\_Newton\_1}$ and $\mathsf{custom\_Newton\_2}$ are implemented in the script. The function values at each iteration for these methods are plotted in the figures \ref{fig:custom_Newton_1} and \ref{fig:custom_Newton_2} respectively. The Rank-1 update method is also implemented in the script as $\mathsf{Quasi\_Newton\_Rank\_1}$ and the function values at each iteration for this method is plotted in the figure \ref{fig:rank_1_update}.
+    
+    All three methods, $\mathsf{custom\_Newton\_1}$, $\mathsf{custom\_Newton\_2}$, and the $\mathsf{Quasi\_Newton\_Rank\_1}$, converged to the optimal solution $\mathbf{x}^* = [1, 1, 1, 1, 1]^T$ with a function value of $-4.5$ in just $3$ iterations. These methods effectively took advantage of second-order information, allowing for faster convergence. In contrast, gradient descent required $100$ iterations and a higher step-size of $0.5$ (refer to \ref{table:results_final_x} and \ref{fig:f2_value_vs_iterations}) to reach the same solution. This highlights the efficiency of Quasi-Newton methods compared to gradient descent, which took more time and required more iterations.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{cn_1.png}
+        \caption{Function value vs iterations for custom Newton 1}
+        \label{fig:custom_Newton_1}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{cn_2.png}
+        \caption{Function value vs iterations for custom Newton 2}
+        \label{fig:custom_Newton_2}
+    \end{figure}
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{rank_1.png}
+        \caption{Function value vs iterations for Rank-1 update}
+        \label{fig:rank_1_update}
+    \end{figure}
+
+\end{enumerate}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
