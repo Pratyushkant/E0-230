@@ -1,0 +1,998 @@
+\documentclass{article}
+% Make the boundary larger
+
+\usepackage[margin=0.75in]{geometry}
+\usepackage{amsmath, csquotes}
+\usepackage{amssymb, mathtools, float, subcaption, tcolorbox}
+\usepackage{graphicx, hyperref}
+
+\begin{document}
+
+
+\title{Assignment 1}
+
+
+\author{Pratyush Kant}
+
+\maketitle
+
+\part*{1: Convex and Coercive functions (5 points)}
+
+\section*{Problem 1}
+
+Write code to check whether the functions $f1$ and $f2$ are convex or not in an interval of $[-2,2]$. Report which functions are strictly convex. Both functions are one dimensional. Write a function $\mathsf{isConvex(function name, interval)}$ that takes the mentioned arguments and returns either true or false. To call $f1$, $f2$ you need to pass two arguments,
+\begin{itemize}
+    \item[i.] SR.No (int format)
+    \item[ii.] $x$ value. eg: $f(x) = f1(\mathsf{Sr.No}, x)$
+\end{itemize}
+
+\begin{enumerate}
+    \item[(a)] Report how you tested the convexity.
+    \item[(b)] Report which function is convex or strongly convex or not a convex along with the values of $x^*$ and $f(x^*)$ and explain how you evaluated. Is $x^*$ unique?
+\end{enumerate}
+
+\section*{Solution}
+
+\subsection*{(a)}
+
+Let $f: \mathbb{R} \mapsto \mathbb{R}$ be a function in $C^2$. We claim that $f$ is convex (strictly convex) if and only if $f''(x) \geq  0$ $(f''(x) > 0)$ for all $x \in \mathbb{R}$. We have already seen in class that $f$ is convex (strictly convex) if and only if $f(y) \geq f(x) + f'(x) (y - x)$ ($f(y) > f(x) + f'(x) (y - x)$) for all $x, y \in \mathbb{R}$. If $f \in C^2$ then from the Taylor's theorem, $\exists\ \alpha \in [0, 1]$ such that
+
+\begin{align*}
+    f(y) = f(x) + f'(x)(y - x) + \frac{f''(x + \alpha(y - x))}{2}(y - x)^2
+\end{align*}
+
+$f$ is convex (strictly convex) $\iff$ $f(y) \geq f(x) + f'(x)(y - x)$ (($f(y) > f(x) + f'(x) (y - x)$)) $\iff f''(z) \geq 0$ ($f''(z) > 0$) for all $z \in [x, y]$.
+
+We will use this second derivative test to check the convexity of the functions $f1$ and $f2$. If $f''(x) > 0$ for all $x \in [-2, 2]$, then the function is strictly convex. If $f''(x) \geq 0$ for all $x \in [-2, 2]$, then the function is convex. If $f''(x) < 0$ at some point $x \in [-2, 2]$, then the function is not convex.
+
+\subsubsection*{Approximating Second derivative}
+
+Let $f: \mathbb{R} \mapsto \mathbb{R}$ be a function in $C^2$. We can approximate the second derivative of $f$ at a point $x$ by using the following formula:
+
+\begin{align*}
+    f''(x) \approx \frac{f(x + h) - 2f(x) + f(x - h)}{h^2}
+\end{align*}
+
+where $h$ is a small number. To justify it we can use the Taylor's theorem. Let $f \in C^2$. Then from the Taylor's theorem, $\exists\ \alpha \in [0, 1]$ such that
+
+\begin{align*}
+    f(x + h) = f(x) + f'(x)h + \frac{f''(x + \alpha h)}{2}h^2
+\end{align*}
+
+\begin{align*}
+    f(x - h) = f(x) - f'(x)h + \frac{f''(x - \alpha h)}{2}h^2
+\end{align*}
+
+Adding the above two equations, we get
+
+\begin{align*}
+    f(x + h) + f(x - h) &= 2f(x) + \frac{f''(x + \alpha h)}{2}h^2 + \frac{f''(x - \alpha h)}{2}h^2 \\
+    \frac{f(x + h) - 2f(x) + f(x - h)}{h^2} &= \frac{f''(x + \alpha h) + f''(x - \alpha h)}{2}
+\end{align*}
+
+As $h \to 0$, $\alpha h \to 0$. So, $\frac{f(x + h) - 2f(x) + f(x - h)}{h^2} \to \frac{f''(x) + f''(x)}{2} = f''(x)$.
+
+The plot of the functions $f1$ and $f2$ are shown in Figure \ref{fig:f1} and Figure \ref{fig:f2} respectively.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/f1.png}
+    \caption{Plot of the function $f1$}
+    \label{fig:f1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/f2.png}
+    \caption{Plot of the function $f1$}
+    \label{fig:f2}
+\end{figure}
+
+Their second derivatives are plotted in Figure \ref{fig:f1_second_derivative} and Figure \ref{fig:f2_second_derivative} respectively.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/f1_second_derivative.png}
+    \caption{Plot of the second derivative of the function $f1$}
+    \label{fig:f1_second_derivative}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/f2_second_derivative.png}
+    \caption{Plot of the second derivative of the function $f2$}
+    \label{fig:f2_second_derivative}
+\end{figure}
+
+\subsection*{(b)}
+
+Recall the definition that $f$ is strongly convex in an interval $I$ if $\forall\ x \in I\ f''(x) > m > 0$ for some $m$. In the function $\mathsf{isConvex}$ we are checking the minimum value of the second derivative for $f$. We have three possibilities:
+\begin{itemize}
+    \item[i.] If the minimum value of the second derivative is greater than $m > 0$, then the function is strongly convex.
+    \item[ii.] If the minimum value of the second derivative is equal to 0, then the function is convex but not strongly convex.
+    \item[iii.] If the minimum value of the second derivative is less than 0, then the function is not convex.
+\end{itemize}
+
+We have used the value of $m = 1e-20$ which gives the observations as follows:
+
+\begin{itemize}
+    \item[i.] The function $f1$ is convex but not strongly convex.
+    \item[ii.] The function $f2$ is strongly convex.
+\end{itemize}
+
+\subsubsection*{Finding minima of a function}
+
+We claim that if $f$ is a convex function then any local minima $x^*$ is a global minima. To see this if $f$ is convex then $\forall\ x, y$
+
+$$f(y) \geq f(x) + \nabla f(x) (y - x)$$
+
+If $x^*$ is a global minima then $\nabla f(x^*) = 0 \implies f(y) \geq f(x^*)$ for all $y$. Hence, $x^*$ is a global minima. To find the local minima it suffices to check where $f'(x) = 0$ and $f'(x)$ can be approximated as
+
+\[
+    f'(x) \approx \frac{f(x + h) - f(x)}{h}
+\]
+
+If $f'(x) > 0$ then the minima on $[-2, 2]$ is $f(-2)$ and $x^* = -2$, else it is the point where $f(x^*) = 0$. From this analysis, we conclude the following:
+
+\begin{itemize}
+    \item The function $f1$ has minima in the interval $[-0.02, 0.02]$, $x^* \in [-0.02, 0.02]$ and $f1(x^*) = 0.0036$. Hence, $x^*$ is not unique for $f1$.
+    \item The function $f2$ has global minima at $x^* = -2$ and $f2(x^*) = 0.1218$. Hence, $x^*$ is unique for $f2$.
+\end{itemize}
+
+The plots for first derivatives for $f1$ and $f2$ alongwith their minimas marked in red in the plots of $f1$ and $f2$ are shown in Figure \ref{fig:f1_first_derivative} and Figure \ref{fig:f2_first_derivative} respectively.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/1.png}
+    \caption{Plot of the first derivative of the function $f1$ and minimas in $f1$}
+    \label{fig:f1_first_derivative}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/2.png}
+    \caption{Plot of the first derivative of the function $f2$ and minimas in $f2$}
+    \label{fig:f2_first_derivative}
+\end{figure}
+
+\clearpage
+
+\section*{Problem 2}
+
+Given $f3$, a quartic polynomial, write two functions $\mathsf{isCoercive(function name)}$ that returns whether the function is coercive or not and $\mathsf{FindStationaryPoints(function name)}$ that returns a dictionary with keys as Roots, Minima, LocalMaxima. Call $f3$ like how you called $f1$ or $f2$.
+
+\begin{enumerate}
+    \item [(a)] Report how you tested the coercivity.
+    \item [(b)] Report all the stationary points and roots and explain how you evaluated them.
+\end{enumerate}
+
+\section*{Solution}
+
+\subsection*{(a)}
+
+A function $f$ is coercive if $\lim_{\|x\| \to \infty} f(x) = \infty$. If the leading coefficient of the polynomial is positive then the function is coercive. Hence, we can check the sign of the leading coefficient of the polynomial to check if the function is coercive or not.
+
+The plot of the function $f3$ is shown in Figure \ref{fig:f3}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/f3.png}
+    \caption{Plot of the function $f3$}
+    \label{fig:f3}
+\end{figure}
+
+\begin{align*}
+    f(x) &= ax^4 + bx^3 + cx^2 + dx + e \\
+    f'(x) &= 4ax^3 + 3bx^2 + 2cx + d \\
+    f''(x) &= 12ax^2 + 6bx + 2c \\
+    f^3(x) &= 24ax + 6b \\
+    f^4(x) &= 24a
+\end{align*}
+
+Hence, it suffices to check $f^4(x)$ which is a constant function. The fourth derivative can be approximated by the following formula:
+
+\begin{align*}
+    f^4(x) \approx \frac{f(x + 2h) - 4f(x + h) + 6f(x) - 4f(x - h) + f(x - 2h)}{h^4}
+\end{align*}
+
+To see a justification of the above formula, we can use the Taylor's theorem. Let $f \in C^4$. Then from the Taylor's theorem, $\exists\ \alpha_i \in [0, 1]$ such that
+
+\begin{align*}
+    f(x + 2h) &= f(x) + 2hf'(x) + 2h^2f''(x) + (2h)^3 \frac{f^3(x)}{3!} + (2h)^4 \frac{f^4(x + \alpha_1 2h)}{4!} \\
+    f(x + h) &= f(x) + hf'(x) + h^2\frac{f''(x)}{2} + h^3 \frac{f^3(x)}{3!} + h^4 \frac{f^4(x + \alpha_2 h)}{4!} \\
+    f(x - h) &= f(x) - hf'(x) + h^2\frac{f''(x)}{2} - h^3 \frac{f^3(x)}{3!} + h^4 \frac{f^4(x - \alpha_3 h)}{4!} \\
+    f(x - 2h) &= f(x) - 2hf'(x) + 2h^2f''(x) - (2h)^3 \frac{f^3(x)}{3!} + (2h)^4 \frac{f^4(x - \alpha_4 2h)}{4!}
+\end{align*}
+
+Hence, we have
+
+\begin{align*}
+    \lim_{h \to 0} f(x + 2h) - 4f(x + h) + 6f(x) - 4f(x - h) + f(x - 2h) &= h^4 f^4(x)
+\end{align*}
+
+Since $f^4(x)$ is a constant function, we can check the sign of $f^4(0)$ to check if the function is coercive or not. By making this observation, we conclude that $f3$ is a coercive function.
+
+\subsection*{(b)}
+
+The plot of $f3$ in the interval $[-3, 3]$ is shown in Figure \ref{fig:f3_interval}. it suggest that $f3$ has $4$ roots and three stationary points out of which two are minima and one is a local maxima.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Images/3.png}
+    \caption{Plot of the function $f3$ in the interval $[-3, 3]$}
+    \label{fig:f3_interval}
+\end{figure}
+
+We will use this information and reduce the interval to $[-3, 3]$ to find the roots and stationary points. As there cannot be any more roots than $4$ and more than $3$ stationary points, for a quartic polynomial, we can conclude that we have found all the roots and stationary points. To find the root we can use the bisection method and to find the stationary points we can use the NewtonBisection method again on the approximated first derivative.
+
+\subsubsection*{Bisection Method}
+
+Let $f: \mathbb{R} \mapsto \mathbb{R}$ be a continuous function. If $f(a)f(b) < 0$ then from the intermediate value theorem $\exists\ x \in (a, b)$ such that $f(x) = 0$. The bisection method is based on this same principle. If $f(a) f(b) < 0$ then we check $f\left(\frac{a + b}{2}\right)$. If $f\left(\frac{a + b}{2}\right) = 0$ then we have found the root. If $f\left(\frac{a + b}{2}\right) f(a) < 0$ then the root lies in $(a, \frac{a + b}{2})$ else it lies in $(\frac{a + b}{2}, b)$. We can repeat this process to find the root. The method converges exponentially. To see the convergence, let $x_n$ be the $n$-th approximation of the root. Then
+
+\begin{align*}
+    x_{n + 1} = \frac{a_n + b_n}{2} \implies |x_{n + 1} - x^*| \leq \frac{1}{2}|b_n - a_n| = \frac{1}{2^n}|b - a|
+\end{align*}
+
+For bisection method to converge close to the root, the interval must contain the root (else the algorithm terminates due to increasing the number of iterations). From the figure \ref{fig:f3_interval}, we can see that the roots are in the intervals $[-3, -1.5]$, $[-1.5, 0]$, $[0, 1.5]$ and $[1.5, 3]$. Upon using this method, we find the roots to be:
+
+\begin{align*}
+    \text{Root 1} &= -2.0026369585830253 \\
+    \text{Root 2} &= -0.40414530897396617 \\
+    \text{Root 3} &= 0.690238843759289 \\
+    \text{Root 4} &= 2.416543423983967
+\end{align*}
+
+The stationary points lie in the interval $[-2, -1]$, $[-1, 1]$ and $[1, 2]$. We will use bisection method on the first derivative of $f3$ on these intervals to find the stationary points and compare the double derivatives at these points with $0$ to classify them as local minima, local maxima or saddle point. The observed results are:
+
+\begin{align*}
+    \text{Extrema 1} &= -1.4206155920983292 \quad \text{label: Local minima} \\
+    \text{Extrema 2} &= 0.1467414572252892 \quad \text{label: Local maxima} \\
+    \text{Extrema 3} &= 1.798872635292355 \quad \text{label: Local minima}
+\end{align*}
+
+\newpage
+
+\part*{2: Gradient Descent (15 points)}
+
+\section*{Problem 1}
+
+Given a function $f4$ of the form $\frac{1}{2}\mathbf{x^T A x} + \mathbf{b^T x}$, where $\bf{A} \in \mathbb{R}^{5 \times 5}$ and $\bf{b, x} \in \mathbb{R}^5$. Consider the initialization as $\bf{x_0} = [0.0, 0.0, 0.0, 0.0, 0.0]$ The function call for $f4$ is $fx, gradfx = f4(\mathsf{Sr.No}, x)$, where $x$ is a NumPy array like $\bf{x_0}$. Write code for the following methods.
+
+\begin{enumerate}
+    \item [(a)] Gradient Descent with fixed step size: Implement an optimization algorithm,
+    start from x0 and consider $\alpha = 10^{-5}$, direction at every iteration $\bf{p_k = - \nabla f(x_k)}$, update rule is $\bf{x_{k + 1} = x_k + \alpha x_k}$. Name your function as $\mathsf{ConstantGradientDescent(alpha, initialx)}$.
+
+    \item [(b)] Gradient Descent with Diminishing step-size: Consider the same setup as
+    above, but the step size $\alpha_kk = \frac{\alpha_0}{k + 1}$ and $\alpha_0 = 10^{-3}$. Run this algorithm for minimum of $10000$ iterations, and report the values of $x_T$ and $f(x_T)$ where $T = 10000$. Are these matching with the previous answer, if not what might be the reason. Name your function as $\mathsf{DiminishingGradientDescent(InitialAlpha, initialx)}$.
+
+    \item [(c)] Inexact Line Search Using Wolfe Conditions: In the previous two questions we are kind of making $\alpha$ as deterministic. Now set the alpha in every iteration using the following two conditions, with $c_1 + c_2 = 1$ and $\bf{p_k = - \nabla f(x_k)}$:
+    \[f(\bf{x_k} + \alpha_k \bf{p_k}) \leq f(\bf{x_k}) + c_1\alpha_k \bf{p_k}^T \nabla f(\bf{x_k}) \tag{1}\]
+    and,
+    \[-\bf{p_k}^T \nabla f(\bf{x_k} + \alpha_k \bf{p_k}) \leq -c_2 \bf{p_k}^T \nabla f(\bf{x_k}) \tag{2}\]
+    We choose the $\alpha$ in every iteration as: 
+    $$\alpha_k = 1$$ 
+    \begin{center}
+        \textbf{while any of (i) or (ii) not satisfied}:
+    \end{center}
+    $$\alpha = \gamma \cdot \alpha$$
+    \begin{center}
+        \textbf{End while}
+    \end{center}
+    Report the values of $x^*$ and $f(x^*)$. Name your function as $\mathsf{InExactLineSearch(c1, c2, gamma)}$.
+
+    \item [(d)] Exact Line Search: Unlike doing a search for $\alpha$ in every iteration, we solve a optimization problem over $\alpha$ like follows, $\alpha_kk = \arg\min f(\bf{x_k} - \alpha \nabla f(\bf{x_k}))$.The solution $\alpha$ of the optimization problem for the quadratic form is
+    \[
+        \alpha = -\frac{\nabla f(\bf{x_k})^T (\bf{p_k})}{\bf{p_k}^T \bf{A} \bf{p_k}}
+    \]
+    where $\bf{p_k} = - \nabla f(\bf{x_k})$. Name your function as $\mathsf{ExactLineSearch()}$.
+\end{enumerate}
+
+For all the above methods report $\bf{x^*}, f(\bf{x^*})$, number of iterations $(T)$ and plot the following at each iteration:
+
+\begin{itemize}
+    \item $\mid \mid f(\bf{x_k}) \mid \mid_2$,
+    \item $f(\bf{x_k}) - f(\bf{x_T})$,
+    \item The ratio $\frac{f(\bf{x_k}) - f(\bf{x_T})}{f(\bf{x_{k - 1}}) - f(\bf{x_T})}$,
+    \item $\mid \mid \bf{x_k} - \bf{x_T} \mid \mid_2^2$, and,
+    \item The ratio $\frac{\mid \mid \bf{x_k} - \bf{x_T} \mid \mid_2^2}{\mid \mid \bf{x_{k - 1}} - \bf{x_T} \mid \mid_2^2}$.
+\end{itemize}
+
+\section*{Solution}
+
+\subsection*{(a)}
+
+\begin{center}
+    Number of iterations: $T = 10000$ \\
+    $\bf{x^*} = [-4.5e-05, -5.e-04, -1.e-03, -2.e-03, -9.99954827e-03]$ \\
+    $f(\bf{x^*}) = -0.006772501227364909$
+\end{center}
+
+\subsection*{(b)}
+
+\begin{center}
+    Number of iterations: $T = 10000$ \\
+    $\bf{x^*} = [-0.00014865, -0.00091097, -0.001, -0.00104778, -0.00108767]$ \\
+    $f(\bf{x^*}) = -0.0022860714127654882$
+\end{center}
+
+They are not matching with the previous answer. The reason for this discrepancy is that the step size is diminishing at every iteration. Hence, the step size is too small to reach the global minima in $10000$ iterations.
+
+\subsection*{(c)}
+
+\begin{center}
+    Number of iterations: $T = 10000$ \\
+    $\bf{x^*} = [-4.50e-05, -5.e-04, -1.e-03, -2.e-03, -9.998e-03]$ \\
+    $f(\bf{x^*}) = -0.006772501036203483$
+\end{center}
+
+\subsection*{(d)}
+
+Calculating $A$:
+
+$$f(x) = \frac{1}{2}x^TAx + b^Tx$$
+$$\nabla f(x) = Ax + b$$
+$$\nabla^2 f(x) = A$$
+
+At $x = (0, 0, 0, 0, 0)$, $\nabla f(0) = b$. From the code, we get $b = (1, 1, 1, 1, 1)^T$. Notice that $A \in \mathbb{R}^{5 \times 5}$.
+
+\begin{align*}
+    A &= \begin{pmatrix}
+        a_{11} & a_{12} & a_{13} & a_{14} & a_{15} \\
+        a_{21} & a_{22} & a_{23} & a_{24} & a_{25} \\
+        a_{31} & a_{32} & a_{33} & a_{34} & a_{35} \\
+        a_{41} & a_{42} & a_{43} & a_{44} & a_{45} \\
+        a_{51} & a_{52} & a_{53} & a_{54} & a_{55}
+    \end{pmatrix}
+\end{align*}
+
+$$
+    A \times \begin{pmatrix}
+        1 \\
+        0 \\
+        0 \\
+        0 \\
+        0
+    \end{pmatrix} = \begin{pmatrix}
+        a_{11} \\
+        a_{21} \\
+        a_{31} \\
+        a_{41} \\
+        a_{51}
+    \end{pmatrix} \quad 
+    A \times \begin{pmatrix}
+        0 \\
+        1 \\
+        0 \\
+        0 \\
+        0
+    \end{pmatrix} = \begin{pmatrix}
+        a_{12} \\
+        a_{22} \\
+        a_{32} \\
+        a_{42} \\
+        a_{52}
+    \end{pmatrix} \quad 
+    A \times \begin{pmatrix}
+        0 \\
+        0 \\
+        1 \\
+        0 \\
+        0
+    \end{pmatrix} = \begin{pmatrix}
+        a_{13} \\
+        a_{23} \\
+        a_{33} \\
+        a_{43} \\
+        a_{53}
+    \end{pmatrix} \quad 
+    A \times \begin{pmatrix}
+        0 \\
+        0 \\
+        0 \\
+        1 \\
+        0
+    \end{pmatrix} = \begin{pmatrix}
+        a_{14} \\
+        a_{24} \\
+        a_{34} \\
+        a_{44} \\
+        a_{54}
+    \end{pmatrix} \quad 
+    A \times \begin{pmatrix}
+        0 \\
+        0 \\
+        0 \\
+        0 \\
+        1
+    \end{pmatrix} = \begin{pmatrix}
+        a_{15} \\
+        a_{25} \\
+        a_{35} \\
+        a_{45} \\
+        a_{55}
+    \end{pmatrix}
+$$
+
+From the calculations, we get:
+
+\begin{align*}
+    A \times (1, 0, 0, 0, 0)^T + (1, 1, 1, 1, 1) &= (22222, 1, 1, 1, 1)^T \\
+    \implies A \times (1, 0, 0, 0, 0)^T &= (22221, 0, 0, 0, 0)^T
+\end{align*}
+
+\begin{align*}
+    A \times (0, 1, 0, 0, 0)^T + (1, 1, 1, 1, 1) &= (1, 2001, 1, 1, 1)^T \\
+    \implies A \times (0, 1, 0, 0, 0)^T &= (0, 2000, 0, 0, 0)^T
+\end{align*}
+
+\begin{align*}
+    A \times (0, 0, 1, 0, 0)^T + (1, 1, 1, 1, 1) &= (1, 1, 1001, 1, 1)^T \\
+    \implies A \times (0, 0, 1, 0, 0)^T &= (0, 0, 1000, 0, 0)^T
+\end{align*}
+
+\begin{align*}
+    A \times (0, 0, 0, 1, 0)^T + (1, 1, 1, 1, 1) &= (1, 1, 1, 501, 1)^T \\
+    \implies A \times (0, 0, 0, 1, 0)^T &= (0, 0, 0, 500, 0)^T
+\end{align*}
+
+\begin{align*}
+    A \times (0, 0, 0, 0, 1)^T + (1, 1, 1, 1, 1) &= (1, 1, 1, 1, 101)^T \\
+    \implies A \times (0, 0, 0, 0, 1)^T &= (0, 0, 0, 0, 100)^T
+\end{align*}
+
+Hence, we have:
+
+\begin{align*}
+    A &= \begin{pmatrix}
+        22221 & 0 & 0 & 0 & 0 \\
+        0 & 2000 & 0 & 0 & 0 \\
+        0 & 0 & 1000 & 0 & 0 \\
+        0 & 0 & 0 & 500 & 0 \\
+        0 & 0 & 0 & 0 & 100
+    \end{pmatrix}
+\end{align*}
+
+\begin{center}
+    Number of iterations: $T = 10000$ \\
+    $\bf{x^*} = [-4.5e-05, -5.e-04, -1.e-03, -2.e-03, -1.e-02]$ \\
+    $f(\bf{x^*}) = -0.006772501237568064$
+\end{center}
+
+\subsection*{Plots}
+
+\begin{itemize}
+    \item Norm of the gradient is shown in the figure \ref{fig:gradient_norm}.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{Images/4.png}
+        \caption{Norm of the function}
+        \label{fig:gradient_norm}
+    \end{figure}
+
+    \item $f(\bf{x_k}) - f(\bf{x_T})$ is shown in the figure \ref{fig:f_difference}.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{Images/5.png}
+        \caption{$f(\bf{x_k}) - f(\bf{x_T})$}
+        \label{fig:f_difference}
+    \end{figure}
+
+    \item The ratio $\frac{f(\bf{x_k}) - f(\bf{x_T})}{f(\bf{x_{k - 1}}) - f(\bf{x_T})}$ is shown in the figure \ref{fig:f_ratio}.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{Images/6.png}
+        \caption{The ratio $\frac{f(\bf{x_k}) - f(\bf{x_T})}{f(\bf{x_{k - 1}}) - f(\bf{x_T})}$}
+        \label{fig:f_ratio}
+    \end{figure}
+
+    \item $\mid \mid \bf{x_k} - \bf{x_T} \mid \mid_2^2$ is shown in the figure \ref{fig:x_difference}.
+    
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.8\textwidth]{Images/7.png}
+        \caption{$\mid \mid \bf{x_k} - \bf{x_T} \mid \mid_2^2$}
+        \label{fig:x_difference}
+    \end{figure}
+
+    \item The ratio $\frac{\mid \mid \bf{x_k} - \bf{x_T} \mid \mid_2^2}{\mid \mid \bf{x_{k - 1}} - \bf{x_T} \mid \mid_2^2}$ is shown in the figure \ref{fig:x_ratio}.
+    
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.8\textwidth]{Images/8.png}
+        \caption{The ratio $\frac{\mid \mid \bf{x_k} - \bf{x_T} \mid \mid_2^2}{\mid \mid \bf{x_{k - 1}} - \bf{x_T} \mid \mid_2^2}$}
+        \label{fig:x_ratio}
+    \end{figure}
+\end{itemize}
+
+\newpage
+
+\part*{3: Perturbed Gradient Descent (10 + 5 points)}
+
+In this exercise, we will try to check if the intentional addition of noise to gradient descent can help us avoid saddle points. But before doing so, let us revise the necessary and sufficient conditions for identifying (local) minima of continuously differentiable functions. We will start with the first order necessary conditions which state that if a point $\mathbf{x^*}$ is a local minimum in an open neighbourhood of $\mathbf{x^*}$, then it is a stationary point, i.e., $\nabla f(\mathbf{x^*}) = 0$. Note, however, that the converse may not always be true.
+
+To find if a point is indeed a minimum, we would need additional information on the Hessian of the function at that point. Supposing that $\nabla^2 f$ exists and is continuous in an open neighbourhood of $\mathbf{x^*}$:
+
+\begin{itemize}
+    \item If $\mathbf{x^*}$ is a local minimum, then $\nabla f(\mathbf{x^*}) = 0$ and $\nabla^2 f(\mathbf{x^*})$ is positive semidefinite.
+    \item Conversely, if $\nabla f(\mathbf{x^*}) = 0$ and $\nabla^2 f(\mathbf{x^*})$ is positive semidefinite at a point $\mathbf{x^*}$, then $\mathbf{x^*}$ is a strict local minimiser of $f$.
+    \item Alternatively, a stationary point is a local maximiser if the Hessian is negative semidefinite, or a saddle point if the Hessian has a mix of non-positive and non-negative eigenvalues at that point.
+\end{itemize}
+
+Please refer to Chapter 2 of Nocedal and Wright for a deeper and more thorough exposition.
+
+To escape saddle points, we will make use of perturbed gradient descent, whose update-equation is given by:
+
+$$
+    \mathbf{\theta}^{t + 1} = \mathbf{\theta}^{t} - \alpha_t \left(\nabla f(\bf{\theta}^{t}) + \bf{\zeta}^{(t)}\right)
+$$
+
+where, $\alpha_t \geq 0$, and $\bf{\zeta}^{(t)}$ is an artificially-added noise term. Here, we may choose to add uncorrelated Gaussian noise to each coordinate such that: $\bf{\zeta}^{(t)} \sim \mathcal{N}(\mathbf{0}, \sigma^2\mathbf{I})$.\footnote{One may use the $\mathsf{random.multivariate normal()}$ function from $\mathsf{numpy}$ to generate samples from a normal distribution.} The step-size $\alpha_t$ and the noise-variance may either be constant, or may diminish at each iteration as:
+
+$$ \beta_t = \frac{\beta_0}{(t + 1)}$$
+
+Now, consider the following function:
+
+$$f(x, y) = e^{xy}$$
+
+with $x, y \in \mathbb{R}$.
+
+\section*{Problem 1}
+
+Find all the stationary points of $f(x, y)$ and categorise them as minima, maxima, or saddle points.
+
+\section*{Solution}
+
+\begin{align*}
+    f(x, y) &= e^{xy} \\
+    \nabla f(x, y) &= \begin{pmatrix}
+        ye^{xy} \\
+        xe^{xy}
+    \end{pmatrix} \\
+    \nabla^2 f(x, y) &= \begin{pmatrix}
+        y^2e^{xy} & e^{xy} + xye^{xy} \\
+        e^{xy} + xye^{xy} & x^2e^{xy}
+    \end{pmatrix}
+\end{align*}
+
+Since $f$ is differentiable and continuous everywhere, every stationary point of $f$ must satisfy $\nabla f = 0 \implies ye^{xy} = 0$ and $xe^{xy} = 0$. This implies that the stationary points are at $(0, 0)$. Furthermore, the Hessian at $(0, 0)$ is:
+
+\begin{align*}
+    \nabla^2 f(0, 0) &= \begin{pmatrix}
+        0 & 1 \\
+        1 & 0
+    \end{pmatrix}
+\end{align*}
+
+The eigenvalues of the Hessian are $1$ and $-1$. Hence, $(0, 0)$ is a saddle point.
+
+\section*{Problem 2}
+
+Analytically show that on starting gradient descent at an initial point $x = y$, one
+stays on the line $x = y$.
+
+\section*{Solution}
+
+Consider the function $f(x, y) = e^{xy}$. The gradient descent update rule is given by:
+
+$$
+    \begin{pmatrix}
+        x^{t + 1} \\
+        y^{t + 1}
+    \end{pmatrix} = \begin{pmatrix}
+        x^t \\
+        y^t
+    \end{pmatrix} - \alpha_t \begin{pmatrix}
+        ye^{xy} \\
+        xe^{xy}
+    \end{pmatrix}
+$$
+
+Given that $x = y = k$ (say), the update rule becomes:
+
+$$
+    \begin{pmatrix}
+        x^{t + 1} \\
+        y^{t + 1}
+    \end{pmatrix} = \begin{pmatrix}
+        k^t \\
+        k^t
+    \end{pmatrix} - \alpha_t \begin{pmatrix}
+        ke^{k^2} \\
+        ke^{k^2}
+    \end{pmatrix}
+$$
+
+This simplifies to:
+
+$$
+    \begin{pmatrix}
+        x^{t + 1} \\
+        y^{t + 1}
+    \end{pmatrix} = \begin{pmatrix}
+        k^t - \alpha_t ke^{k^2} \\
+        k^t - \alpha_t ke^{k^2}
+    \end{pmatrix}
+$$
+
+Hence, 
+
+\begin{align*}
+    x^{t + 1} &= k^t - \alpha_t ke^{k^2} \\
+    y^{t + 1} &= k^t - \alpha_t ke^{k^2} \\
+    \implies x^{t + 1} &= y^{t + 1}
+\end{align*}
+
+Hence, on starting gradient descent at an initial point $x = y$, one stays on the line $x = y$.
+
+\section*{Problem 3}
+
+Create a contour plot of $f(x, y)$, with $-1 \leq x \leq 1$ and $-1 \leq y \leq 1$.
+
+\section*{Solution}
+
+The contour plot of $f(x, y)$ is shown in the figure \ref{fig:contour_plot}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{Images/3.3.png}
+    \caption{Contour plot of $f(x, y)$}
+    \label{fig:contour_plot}
+\end{figure}
+
+\section*{Problem 4}
+
+Run gradient descent with a fixed step-size on $f(x, y)$ starting with a point such that $x = y$. Plot the function value at each iteration, and the trajectory of the points on the contour plot.
+
+\section*{Solution}
+
+The plot of the function value at each iteration is shown in the figure \ref{fig:function_value} and the function value at each iteration is shown in the figure \ref{fig:function_value_1}.
+
+\begin{figure}[ht]
+    \centering
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.4.png}
+        \caption{Contour plot alongwith $(x_t, y_t)$ at each iteration with constant learning rate}
+        \label{fig:function_value}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.5.png}
+        \caption{Function value at each iteration with constant learning rate}
+        \label{fig:function_value_1}
+    \end{minipage}
+    \caption{Combined figures showing contour plot and function value over iterations.}
+    \label{fig:combined_figures}
+\end{figure}
+
+\section*{Problem 5}
+
+Run gradient descent with a decreasing step-sizes on $f(x, y)$ starting with a point such that $x = y$. Plot the function value at each iteration, and the trajectory of the points on the contour plot.
+
+\section*{Solution}
+
+The plot of the function value at each iteration is shown in the figure \ref{fig:function_value_2} and the function value at each iteration is shown in the figure \ref{fig:function_value_3}.
+
+\begin{figure}[ht]
+    \centering
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.6.png}
+        \caption{Contour plot alongwith $(x_t, y_t)$ at each iteration with diminishing learning rates}
+        \label{fig:function_value_2}
+    \end{minipage}\hfill
+    \begin{minipage}{0.5\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.7.png}
+        \caption{Function value at each iteration with diminishing learning rate}
+        \label{fig:function_value_3}
+    \end{minipage}
+    \caption{Combined figures showing contour plot and function value with diminishing learning rates.}
+    \label{fig:combined_figures_2}
+\end{figure}
+
+\section*{Problem 6}
+
+Run perturbed gradient descent with a fixed step-size and noise-variance on $f(x, y)$ starting with a point such that $x = y$. Plot the \enquote{expected} function value at each iteration, and the trajectory of the points on the contour plot.
+
+\section*{Solution}
+
+The contour plot is shown in the figure \ref{fig:function_value_4}. The expected function value at each iteration is shown in the figure \ref{fig:function_value_5}.
+
+\section*{Problem 7}
+
+Run perturbed gradient descent with a fixed step-size and decreasing noise-variance on $f(x, y)$ starting with a point such that $x = y$. Plot the \enquote{expected} function value at each iteration, and the trajectory of the points on the contour plot.
+
+\section*{Solution}
+
+The contour plot is shown in the figure \ref{fig:function_value_6}. The expected function value at each iteration is shown in the figure \ref{fig:function_value_7}.
+
+\section*{Problem 8}
+
+Run perturbed gradient descent with decreasing step-sizes and a fixed noise-variance on $f(x, y)$ starting with a point such that $x = y$. Plot the \enquote{expected} function value at each iteration, and the trajectory of the points on the contour plot.
+
+\section*{Solution}
+
+The contour plot is shown in the figure \ref{fig:function_value_8}. The expected function value at each iteration is shown in the figure \ref{fig:function_value_9}.
+
+\section*{Problem 9}
+
+Run perturbed gradient descent with decreasing step-sizes and noise-variances on $f(x, y)$ starting with a point such that $x = y$. Plot the \enquote{expected} function value at each iteration, and the trajectory of the points on the contour plot.
+
+\section*{Solution}
+
+The contour plot is shown in the figure \ref{fig:function_value_10}. The expected function value at each iteration is shown in the figure \ref{fig:function_value_11}.
+
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.8.png}
+        \caption{Contour plot alongwith $(x_t, y_t)$ at each iteration with fixed step-size and noise-variance}
+        \label{fig:function_value_4}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.9.png}
+        \caption{Function value at each iteration with fixed step-size and noise-variance}
+        \label{fig:function_value_5}
+    \end{minipage}
+    \caption{Combined figures showing contour plot and function value with fixed step-size and noise-variance.}
+    \label{fig:combined_figures_3}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.10.png}
+        \caption{Contour plot alongwith $(x_t, y_t)$ at each iteration with fixed step-size and diminishing noise-variance}
+        \label{fig:function_value_6}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.11.png}
+        \caption{Function value at each iteration with fixed step-size and diminishing noise-variance}
+        \label{fig:function_value_7}
+    \end{minipage}
+    \caption{Combined figures showing contour plot and function value with fixed step-size and diminishing noise-variance.}
+    \label{fig:combined_figures_4}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.12.png}
+        \caption{Contour plot alongwith $(x_t, y_t)$ at each iteration with diminishing step-sizes and fixed noise-variance}
+        \label{fig:function_value_8}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.13.png}
+        \caption{Function value at each iteration with diminishing step-sizes and fixed noise-variance}
+        \label{fig:function_value_9}
+    \end{minipage}
+    \caption{Combined figures showing contour plot and function value with diminishing step-sizes and fixed noise-variance.}
+    \label{fig:combined_figures_5}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.14.png}
+        \caption{Contour plot alongwith $(x_t, y_t)$ at each iteration with diminishing step-sizes and noise-variances}
+        \label{fig:function_value_10}
+    \end{minipage}
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{Images/3.15.png}
+        \caption{Function value at each iteration with diminishing step-sizes and noise-variances}
+        \label{fig:function_value_11}
+    \end{minipage}
+    \caption{Combined figures showing contour plot and function value with diminishing step-sizes and noise-variances.}
+    \label{fig:combined_figures_6}
+\end{figure}
+
+\section*{Problem 10}
+
+Find the relation between $\mathbb{E}[f^{(t+1)}]$ and $\mathbb{E}[f^{(t)}]$.
+
+\section*{Solution}
+
+\begin{align*}
+    f^{(t + 1)} &= e^{x^{(t + 1)} y^{(t + 1)}} \\
+    x^{(t + 1)} &= x^{(t)} - \alpha_t \left(y^{(t)}e^{x^{(t)}y^{(t)}} + \zeta_x^{(t)}\right) \\
+    y^{(t + 1)} &= y^{(t)} - \alpha_t \left(x^{(t)}e^{x^{(t)}y^{(t)}} + \zeta_y^{(t)}\right)
+\end{align*}
+
+Hence, 
+
+\begin{align*}
+    x^{(t + 1)} y^{(t + 1)} &= \left(x^{(t)} - \alpha_t \left(y^{(t)}e^{x^{(t)}y^{(t)}} + \zeta_x^{(t)}\right)\right)\left(y^{(t)} - \alpha_t \left(x^{(t)}e^{x^{(t)}y^{(t)}} + \zeta_y^{(t)}\right)\right) \\
+    &= x^{(t)}y^{(t)} - \alpha_t \left((x^{(t)})^2e^{x^{(t)}y^{(t)}} + x^{(t)}\zeta_y^{(t)} + (y^{(t)})^2e^{x^{(t)}y^{(t)}} + y^{(t)}\zeta_x^{(t)}\right) \\
+    &+ \alpha_t^2 \left(y^{(t)}x^{(t)}e^{x^{(t)}y^{(t)}} + y^{(t)}\zeta_y^{(t)}e^{x^{(t)}y^{(t)}} + x^{(t)}\zeta_x^{(t)}e^{x^{(t)}y^{(t)}} + \zeta_x^{(t)}\zeta_y^{(t)}\right)
+\end{align*}
+
+For simplicity, let $\alpha_t = \alpha$. Further, $\mathbb{E}[\zeta_x^{(t)}] = \mathbb{E}[\zeta_y^{(t)}] = 0$ and $\mathbb{E}[\zeta_x^{(t)}\zeta_y^{(t)}] = 0$. Hence,
+
+\begin{align*}
+    \mathbb{E}[x^{(t + 1)} y^{(t + 1)}] &= \mathbb{E}[x^{(t)}y^{(t)}] -\alpha \mathbb{E}[\left((x^{(t)})^2 + (y^{(t)})^2\right) e^{x^{(t)}y^{(t)}}] + \alpha^2 \mathbb{E}[y^{(t)}x^{(t)}e^{x^{(t)}y^{(t)}}] \\
+    &\leq \mathbb{E}[x^{(t)}y^{(t)}] + (\alpha^2 - 2\alpha) \mathbb{E}[x^{(t)}y^{(t)} e^{x^{(t)}y^{(t)}}] \\
+    &\leq \mathbb{E}[x^{(t)}y^{(t)}] + (\alpha^2 - 2\alpha) \mathbb{E}[x^{(t)}y^{(t)}] \mathbb{E}[e^{x^{(t)}y^{(t)}}] \\
+    &\leq \mathbb{E}[x^{(t)}y^{(t)}] + (\alpha^2 - 2\alpha) \mathbb{E}[x^{(t)}y^{(t)}] e^{\mathbb{E}[x^{(t)}y^{(t)}]} 
+\end{align*}
+
+Hence,
+
+\begin{align*}
+    \mathbb{E}[f^{(t + 1)}] &= e^{\mathbb{E}[x^{(t + 1)}y^{(t + 1)}]} \\
+    &\leq e^{\mathbb{E}[x^{(t)}y^{(t)}]} \times e^{(\alpha^2 - 2\alpha) \mathbb{E}[x^{(t)}y^{(t)}] e^{\mathbb{E}[x^{(t)}y^{(t)}]}} \\
+    &\leq \mathbb{E}[f^{(t)}] \times e^{(\alpha^2 - 2\alpha) \mathbb{E}[x^{(t)}y^{(t)}] \mathbb{E}[f^{(t)}]} \\
+    &\leq \mathbb{E}[f^{(t)}] \times e^{(\alpha^2 - 2\alpha) \mathbb{E}[\ln f]\mathbb{E}[f^{(t)}]}
+\end{align*}
+
+Hence,
+
+$$\mathbb{E}[f^{(t + 1)}] \leq \mathbb{E}[f^{(t)}] \times e^{(\alpha^2 - 2\alpha) \mathbb{E}[\ln f]\mathbb{E}[f^{(t)}]}$$
+
+\clearpage
+\newpage
+
+\part*{4: Zeroth-order Optimisation (10 points)}
+
+Until now, we have been relying on gradients of functions to find their minimisers. Such methods are referred to as first-order methods because they use the first derivatives. Similarly, methods that also utilise the Hessian are called second-order methods. But, what if we do not have access to the gradients? Such situations may arise due to a variety of factors:
+
+\begin{itemize}
+    \item if the gradients simply don't exist, i.e., the function is not differentiable (in these cases, however, one may resort to using the subgradients. But this is out of the scope of this exercise),
+    \item or, the gradients may exist, but computing them is expensive (temporally or monetarily),
+    \item or, as it happens very frequently, we are attempting to optimise a black-box.
+\end{itemize}
+
+All is, however, not lost; because there exist methods that aid in optimisation without the use of gradients. These are referred to as zeroth-order methods. In this exercise, we will learn about two such methods that work on functions $f: \mathbb{R} \mapsto \mathbb{R}$. These methods find the minima (or maxima) of the function $f$ in the interval $[a, b]$, with a major caveat being that the function is unimodal (i.e., only one minimum (or maximum) exists) in the given range. If multiple extrema are present, then these methods converge to any of them, and not necessarily the best one.
+
+\section*{4.1 Golden Section Search}
+
+The method is so named because the search-interval reduces by a factor of $\rho = \left(1 - \frac{1}{\phi}\right)$ at each iteration, where $\phi = \frac{1 + \sqrt{5}}{2}$ is the golden ratio. This method uses only a single evaluation of the function at each iteration, and proceeds as follows:
+
+\begin{enumerate}
+    \item Start with the initial search-interval $[a, b]$.
+    \item Define $x_1 \coloneqq a + \rho(b - a)$ and $x_2 \coloneqq b - \rho(b - a)$.
+    \item Consider the tuple $[a, x_1, x_2, b]$.
+    \item If $f(x_1) \leq f(x_2)$, change the tuple to $[a, x_3, x_1, x_2]$ where $x_3 \coloneqq a + \rho(b - a)$. Else, if $f(x_1) \geq f(x_2)$, change the tuple to $[x_1, x_2, x_3, b]$ where $x_3 \coloneqq b - \rho(b - a)$.
+    \item If convergence is reached, return the final interval; or go back to step 3 with the new tuple.
+\end{enumerate}
+
+\section*{4.2 Fibonacci Search}
+
+This method is similar to golden section search, with the slight modification that instead of using a constant $\rho$, its value is updated at each iteration $t$ to get:
+
+$$\rho_t = 1 - \frac{F_{T - t - 1}}{F_{T - t + 2}}$$
+
+where $T$ is the total number of iterations, and $\{F\}$ is the Fibonacci sequence with $F_{-1} = 0$ and $F_0 = 1$. Also, the final search interval after $T$ iterations is given by $\frac{(b - a)}{F_{T + 1}}$. 
+
+Consider the function:
+
+$$f(x) = x(x - 1)(x - 3)(x + 2); \quad x \in \mathbb{R}$$
+
+\section*{Problem 1}
+
+Find all the extrema of $f(x)$.
+
+\section*{Solution}
+
+\begin{align*}
+    f(x) &= x(x - 1)(x - 3)(x + 2) \\
+    &= x^4 - 2x^3 - 5x^2 + 6x \\
+    \nabla f(x) &= 4x^3 - 6x^2 - 10x + 6\\
+    \nabla^2 f(x) &= 12x^2 - 12x - 10
+\end{align*}
+
+Observe that $\nabla f(x) = 2(2x - 1)(x^2 - x - 3)$. Hence, the extrema of $f(x)$ are at 
+
+$$x \in \left\{\frac{1}{2}, \frac{1 + \sqrt{13}}{2}, \frac{1 - \sqrt{13}}{2}\right\}$$
+
+To classify these points as local maxima or minima, we can use the second derivative test. The second derivative test states that if $f''(x) > 0$ at a point $x$, then $x$ is a local minima. If $f''(x) < 0$ at a point $x$, then $x$ is a local maxima. If $f''(x) = 0$ at a point $x$, then the test is inconclusive. From the calculations, we get:
+
+\begin{align*}
+    \nabla^2 f\left(\frac{1}{2}\right) &< 0 \\
+    \nabla^2 f\left(\frac{1 \pm \sqrt{13}}{2}\right) &> 0 
+\end{align*}
+
+Hence, $x = \frac{1}{2}$ is a point of local maxima and $x = \frac{1 \pm \sqrt{13}}{2}$ are points of local minima.
+
+\section*{Problem 2}
+
+Now, restrict yourself to the interval $[1, 3]$, with the objective of finding the minimum within this interval with a range of $10^{-4}$ using:
+
+\begin{enumerate}
+    \item [(a)] Golden section search. First, report the number of iterations required to achieve the aforesaid precision. Then, implement the method and tabulate the intervals at each iteration. Also, plot $f(a_t)$, $f(b_t)$, $(b_t - a_t)$ and $\frac{(b_t - a_t)}{(b_{t - 1} - a_{t - 1})}$ at each iteration.
+    \item [(b)] Repeat all of the above for Fibonacci search.
+\end{enumerate}
+
+\section*{Solution}
+
+\subsection*{(a)}
+
+The algorithm converges at $x = 2.3027522726894833$ with number of iterations $= 21$. The intervals at each iteration is shown in table \ref{tab:golden-ratio-search}. The plots are shown in the figure \ref{fig:golden-ratio-search}.
+
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|}
+    \hline
+    Iteration & $a_t$ & $b_t$ \\
+    \hline
+    1 & 1.0000000000000000 & 3.0000000000000000 \\
+    2 & 1.7639320225002104 & 3.0000000000000000 \\
+    3 & 1.7639320225002104 & 2.5278640450004204 \\
+    4 & 2.0557280900008412 & 2.5278640450004204 \\
+    5 & 2.2360679774997900 & 2.5278640450004204 \\
+    6 & 2.2360679774997900 & 2.4164078649987380 \\
+    7 & 2.2360679774997900 & 2.3475241575014720 \\
+    8 & 2.2786404500042060 & 2.3475241575014720 \\
+    9 & 2.2786404500042060 & 2.3212129225086224 \\
+    10 & 2.2949016875157726 & 2.3212129225086224 \\
+    11 & 2.2949016875157726 & 2.3111629250273396 \\
+    12 & 2.2949016875157726 & 2.3049516849970560 \\
+    13 & 2.2987404449667720 & 2.3049516849970560 \\
+    14 & 2.3011129275460567 & 2.3049516849970560 \\
+    15 & 2.3011129275460567 & 2.3034854101253410 \\
+    16 & 2.3020191352536260 & 2.3034854101253410 \\
+    17 & 2.3025792024177710 & 2.3034854101253410 \\
+    18 & 2.3025792024177710 & 2.3031392695819166 \\
+    19 & 2.3025792024177710 & 2.3029253429611960 \\
+    20 & 2.3027114163404750 & 2.3029253429611960 \\
+    21 & 2.3027114163404750 & 2.3028436302631790 \\
+    \hline
+    \end{tabular}
+    \caption{Golden Ratio Search Iterations}
+    \label{tab:golden-ratio-search}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{Images/9.png}
+    \caption{Golden Ratio Search Plots}
+    \label{fig:golden-ratio-search}
+\end{figure}
+
+\subsection*{(b)}
+
+The algorithm converges at $x = 2.3055555555555554$ with number of iterations $= 10$. The intervals at each iteration is shown in table \ref{tab:fibonacci-search}. The plots are shown in the figure \ref{fig:fibonacci-search}.
+
+\begin{table}
+    \centering
+    \begin{tabular}{|c|c|c|}
+    \hline
+    Iteration & $a_t$ & $b_t$ \\
+    \hline
+    1 & 1 & 3 \\
+    2 & 1.7638888888888888 & 3 \\
+    3 & 1.7638888888888888 & 2.5277777777777777 \\
+    4 & 2.0555555555555554 & 2.5277777777777777 \\
+    5 & 2.236111111111111 & 2.5277777777777777 \\
+    6 & 2.236111111111111 & 2.4166666666666665 \\
+    7 & 2.236111111111111 & 2.3472222222222223 \\
+    8 & 2.2777777777777777 & 2.3472222222222223 \\
+    9 & 2.2777777777777777 & 2.3194444444444446 \\
+    10 & 2.2916666666666665 & 2.3194444444444446 \\
+    \hline
+    \end{tabular}
+    \caption{Fibonacci Search Iterations}
+    \label{tab:fibonacci-search}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{Images/10.png}
+    \caption{Fibonacci Search Plots}
+    \label{fig:fibonacci-search}
+\end{figure}
+
+
+\end{document}
